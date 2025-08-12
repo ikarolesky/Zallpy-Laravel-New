@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+    container_name: cooperados_app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html:cached
+      - ./vendor:/var/www/html/vendor
+      - ./node_modules:/var/www/html/node_modules
+    depends_on:
+      - db
+    networks:
+      - appnet
+
+  web:
+    image: nginx:stable-alpine
+    container_name: cooperados_web
+    depends_on:
+      - app
+      - node
+    ports:
+      - "8000:80"     # Acesse a app via http://localhost:8000
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - appnet
+
+  db:
+    image: mysql:8.0
+    container_name: cooperados_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: cooperados
+      MYSQL_USER: user
+      MYSQL_PASSWORD: secret
+      TZ: "America/Sao_Paulo"
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - appnet
+
+  node:
+    image: node:20-alpine
+    container_name: cooperados_node
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html:cached
+      - ./node_modules:/var/www/html/node_modules
+    ports:
+      - "5173:5173"   # Vite HMR (dev server)
+    command: ["npm","run","dev"]
+    networks:
+      - appnet
+
+volumes:
+  dbdata:
+
+networks:
+  appnet:
+    driver: bridge

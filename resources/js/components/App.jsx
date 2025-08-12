@@ -1,17 +1,20 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import CooperatorList from './components/CooperatorList';
-import CooperatorForm from './components/CooperatorForm';
-import CooperatorView from './components/CooperatorView';
+import React, {useState} from 'react'
+import Login from './Login'
+import CooperatorForm from './CooperatorForm'
+import CooperatorList from './CooperatorList'
 
-export default function App() {
+export default function App(){
+  const [auth, setAuth] = useState(!!localStorage.getItem('token'))
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<CooperatorList />} />
-        <Route path="/cooperados/create" element={<CooperatorForm />} />
-        <Route path="/cooperados/:id" element={<CooperatorView />} />
-      </Routes>
-    </BrowserRouter>
-  );
+    <div style={{padding:20}}>
+      <h1>Cooperados</h1>
+      {!auth ? <Login onLogin={()=>setAuth(true)} /> : (
+        <>
+          <CooperatorForm />
+          <hr />
+          <CooperatorList />
+        </>
+      )}
+    </div>
+  )
 }

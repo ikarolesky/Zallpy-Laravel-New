@@ -95,9 +95,6 @@ make test
 
 | Método | Rota | Descrição |
 | --- | --- | --- |
-| POST | /api/v1/register | Criar usuário (auth) |
-| POST | /api/v1/login | Login (retorna token) |
-| POST | /api/v1/logout | Logout |
 | GET | /api/v1/cooperados | Listar cooperados (com filtros) |
 | POST | /api/v1/cooperados | Criar cooperado |
 | GET | /api/v1/cooperados/{id} | Detalhes de cooperado |

@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('cooperators', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('cpf_cnpj', 18)->unique();
+            $table->string('cpf_cnpj', 18);
             $table->date('birth_constitution_date');
             $table->decimal('income_revenue', 15, 2);
             $table->string('phone', 20);

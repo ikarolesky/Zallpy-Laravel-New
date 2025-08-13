@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCooperatorRequest;
-use App\Http\Requests\UpdateCooperatorRequest;
+use App\Http\Requests\CooperatorRequest;
 use App\Models\Cooperator;
 use Illuminate\Http\Request;
 
@@ -48,7 +47,7 @@ class CooperatorController extends Controller
     public function destroy($id)
     {
         $cooperator = Cooperator::whereNull('deleted_at')->findOrFail($id);
-        $cooperator->update(['deleted_at' => now()]);
+        $cooperator->delete();
         return response()->json(['message' => 'Cooperado removido com sucesso (exclusão lógica)']);
     }
 }

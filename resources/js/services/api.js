@@ -1,15 +1,19 @@
-import axios from 'axios';
+import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api/v1` : '/api/v1',
-  headers: { Accept: 'application/json' },
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1",
+  withCredentials: true, // para Sanctum
 });
 
-// Exemplo: setar token do Sanctum se existir
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// Interceptador de erros para exibir mensagens amigáveis
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.data) {
+      return Promise.reject(error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

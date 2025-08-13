@@ -1,50 +1,36 @@
-# Nome dos containers (ajuste se mudar no docker-compose.yml)
-PHP_CONTAINER=laravel-php
-NODE_CONTAINER=laravel-node
+SHELL := /bin/bash
 
-# Gera e sobe os containers
 up:
 	docker-compose up -d --build
 
-# Derruba os containers
 down:
 	docker-compose down
 
-# Instala dependências PHP
+restart: down up
+
+logs:
+	docker-compose logs -f --tail=150
+
+bash:
+	docker-compose exec app bash
+
 composer-install:
-	docker-compose exec $(PHP_CONTAINER) composer install
+	docker-compose exec app composer install
 
-# Instala dependências JS
-npm-install:
-	docker-compose exec $(NODE_CONTAINER) npm install
-
-# Gera key Laravel
-key-generate:
-	docker-compose exec $(PHP_CONTAINER) php artisan key:generate
-
-# Roda migrations
 migrate:
-	docker-compose exec $(PHP_CONTAINER) php artisan migrate
+	docker-compose exec app php artisan migrate
 
-# Roda seeds
 seed:
-	docker-compose exec $(PHP_CONTAINER) php artisan db:seed
+	docker-compose exec app php artisan db:seed
 
-# Rodar servidor Laravel
-serve:
-	docker-compose exec $(PHP_CONTAINER) php artisan serve --host=0.0.0.0 --port=8000
+key-generate:
+	docker-compose exec app php artisan key:generate
 
-# Rodar Vite em modo dev
 vite-dev:
-	docker-compose exec $(NODE_CONTAINER) npm run dev
+	docker-compose run --rm -p 5173:5173 node npm run dev
 
-# Rodar Vite build para produção
 vite-build:
-	docker-compose exec $(NODE_CONTAINER) npm run build
+	docker-compose run --rm node npm run build
 
-# Limpar cache Laravel
-cache-clear:
-	docker-compose exec $(PHP_CONTAINER) php artisan cache:clear
-	docker-compose exec $(PHP_CONTAINER) php artisan config:clear
-	docker-compose exec $(PHP_CONTAINER) php artisan route:clear
-	docker-compose exec $(PHP_CONTAINER) php artisan view:clear
+serve:
+	docker-compose exec app php artisan serve --host=0.0.0.0 --port=8000

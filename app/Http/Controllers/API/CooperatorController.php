@@ -12,39 +12,43 @@ class CooperatorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Cooperator::query();
+        $query = Cooperator::query()->whereNull('deleted_at');
 
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('cpf_cnpj', 'like', "%{$search}%");
+        if ($request->filled('name')) {
+            $query->where('name', 'like', "%{$request->name}%");
+        }
+        if ($request->filled('cpf_cnpj')) {
+            $query->where('cpf_cnpj', $request->cpf_cnpj);
         }
 
         return response()->json($query->paginate(10));
     }
 
-    public function store(StoreCooperatorRequest $request)
+    public function store(CooperatorRequest $request)
     {
-        $data = $request->validated();
-        $cooperator = Cooperator::create($data);
+        $cooperator = Cooperator::create($request->validated());
         return response()->json($cooperator, 201);
     }
 
-    public function show(Cooperator $cooperator)
+    public function show($id)
     {
+        $cooperator = Cooperator::whereNull('deleted_at')->findOrFail($id);
         return response()->json($cooperator);
     }
 
-    public function update(UpdateCooperatorRequest $request, Cooperator $cooperator)
+    public function update(CooperatorRequest $request, $id)
     {
+        $cooperator = Cooperator::whereNull('deleted_at')->findOrFail($id);
         $data = $request->validated();
+        unset($data['cpf_cnpj']); // não pode editar CPF/CNPJ
         $cooperator->update($data);
         return response()->json($cooperator);
     }
 
-    public function destroy(Cooperator $cooperator)
+    public function destroy($id)
     {
-        $cooperator->delete();
-        return response()->json(null, 204);
+        $cooperator = Cooperator::whereNull('deleted_at')->findOrFail($id);
+        $cooperator->update(['deleted_at' => now()]);
+        return response()->json(['message' => 'Cooperado removido com sucesso (exclusão lógica)']);
     }
 }

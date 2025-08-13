@@ -12,14 +12,13 @@ class Cooperator extends Model
     protected $fillable = [
         'name',
         'cpf_cnpj',
-        'birth_date',
-        'income',
+        'birth_constitution_date',
+        'income_revenue',
         'phone',
         'email',
     ];
 
-    protected $dates = [
-        'birth_date',
-        'deleted_at',
+    protected $casts = [
+        'birth_constitution_date' => 'date',
     ];
 }

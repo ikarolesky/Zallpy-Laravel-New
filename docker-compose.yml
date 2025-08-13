@@ -1,68 +1,59 @@
-version: "3.8"
+version: '3.8'
 
 services:
   app:
     build:
       context: .
       dockerfile: docker/app/Dockerfile
-    container_name: cooperados_app
-    working_dir: /var/www/html
+    container_name: cooperados-app
     volumes:
-      - ./:/var/www/html:cached
-      - ./vendor:/var/www/html/vendor
-      - ./node_modules:/var/www/html/node_modules
+      - ./:/var/www/html
     depends_on:
       - db
     networks:
-      - appnet
-
-  web:
-    image: nginx:stable-alpine
-    container_name: cooperados_web
+      - net
+  nginx:
+    image: nginx:alpine
+    container_name: cooperados-web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
-      - node
-    ports:
-      - "8000:80"     # Acesse a app via http://localhost:8000
-    volumes:
-      - ./:/var/www/html:ro
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
-      - appnet
-
+      - net
   db:
     image: mysql:8.0
-    container_name: cooperados_db
+    container_name: cooperados-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: cooperados
-      MYSQL_USER: user
+      MYSQL_USER: cooper
       MYSQL_PASSWORD: secret
-      TZ: "America/Sao_Paulo"
+    ports:
+      - "33060:3306"
     volumes:
       - dbdata:/var/lib/mysql
-    ports:
-      - "3306:3306"
     networks:
-      - appnet
-
+      - net
   node:
-    image: node:20-alpine
-    container_name: cooperados_node
+    image: node:18-alpine
+    container_name: cooperados-node
     working_dir: /var/www/html
     volumes:
-      - ./:/var/www/html:cached
-      - ./node_modules:/var/www/html/node_modules
+      - ./:/var/www/html
+    command: sh -c "npm install && npm run dev"
     ports:
-      - "5173:5173"   # Vite HMR (dev server)
-    command: ["npm","run","dev"]
+      - "5173:5173"
     networks:
-      - appnet
+      - net
 
 volumes:
   dbdata:
 
 networks:
-  appnet:
+  net:
     driver: bridge

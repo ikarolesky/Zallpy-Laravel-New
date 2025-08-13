@@ -2,73 +2,72 @@
 
 namespace App\Rules;
 
-use Illuminate\Contracts\Validation\Rule;
+use Closure;
+use Illuminate\Contracts\Validation\ValidationRule;
 
-class CpfCnpj implements Rule
+class CpfCnpj implements ValidationRule
 {
-    public function passes($attribute, $value)
+    public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        $value = preg_replace('/\D/', '', $value);
+        $number = preg_replace('/\D/', '', (string)$value);
 
-        if (strlen($value) === 11) {
-            return $this->validateCPF($value);
-        } elseif (strlen($value) === 14) {
-            return $this->validateCNPJ($value);
+        if (strlen($number) === 11) {
+            if (! $this->validateCpf($number)) {
+                $fail('O CPF informado é inválido.');
+            }
+            return;
         }
 
-        return false;
+        if (strlen($number) === 14) {
+            if (! $this->validateCnpj($number)) {
+                $fail('O CNPJ informado é inválido.');
+            }
+            return;
+        }
+
+        $fail('O campo :attribute deve conter um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.');
     }
 
-    public function message()
+    private function validateCpf(string $cpf): bool
     {
-        return 'O campo :attribute deve conter um CPF ou CNPJ válido.';
+        if (preg_match('/(\d)\1{10}/', $cpf)) return false;
+
+        for ($t = 9; $t < 11; $t++) {
+            $d = 0;
+            for ($c = 0; $c < $t; $c++) {
+                $d += (int)$cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ((int)$cpf[$c] !== $d) return false;
+        }
+        return true;
     }
 
-    private function validateCPF($cpf)
+    private function validateCnpj(string $cnpj): bool
     {
-        if (preg_match('/(\d)\1{10}/', $cpf)) {
-            return false;
-        }
-        $sum = 0;
-        for ($i = 0; $i < 9; $i++) {
-            $sum += (int)$cpf[$i] * (10 - $i);
-        }
-        $rest = $sum % 11;
-        $digit1 = ($rest < 2) ? 0 : 11 - $rest;
-        if ((int)$cpf[9] !== $digit1) {
-            return false;
-        }
-        $sum = 0;
-        for ($i = 0; $i < 10; $i++) {
-            $sum += (int)$cpf[$i] * (11 - $i);
-        }
-        $rest = $sum % 11;
-        $digit2 = ($rest < 2) ? 0 : 11 - $rest;
-        return (int)$cpf[10] === $digit2;
-    }
+        if (preg_match('/(\d)\1{13}/', $cnpj)) return false;
 
-    private function validateCNPJ($cnpj)
-    {
-        if (preg_match('/(\d)\1{13}/', $cnpj)) {
-            return false;
+        $tamanho = strlen($cnpj) - 2;
+        $numeros = substr($cnpj, 0, $tamanho);
+        $digitos = substr($cnpj, $tamanho);
+        $soma = 0;
+        $pos = $tamanho - 7;
+        for ($i = $tamanho; $i >= 1; $i--) {
+            $soma += (int)$numeros[$tamanho - $i] * $pos--;
+            if ($pos < 2) $pos = 9;
         }
-        $weights1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-        $weights2 = [6] + $weights1;
-        $sum = 0;
-        for ($i = 0; $i < 12; $i++) {
-            $sum += (int)$cnpj[$i] * $weights1[$i];
+        $resultado = ($soma % 11 < 2) ? 0 : 11 - ($soma % 11);
+        if ($resultado != (int)$digitos[0]) return false;
+
+        $tamanho++;
+        $numeros = substr($cnpj, 0, $tamanho);
+        $soma = 0;
+        $pos = $tamanho - 7;
+        for ($i = $tamanho; $i >= 1; $i--) {
+            $soma += (int)$numeros[$tamanho - $i] * $pos--;
+            if ($pos < 2) $pos = 9;
         }
-        $rest = $sum % 11;
-        $digit1 = ($rest < 2) ? 0 : 11 - $rest;
-        if ((int)$cnpj[12] !== $digit1) {
-            return false;
-        }
-        $sum = 0;
-        for ($i = 0; $i < 13; $i++) {
-            $sum += (int)$cnpj[$i] * $weights2[$i];
-        }
-        $rest = $sum % 11;
-        $digit2 = ($rest < 2) ? 0 : 11 - $rest;
-        return (int)$cnpj[13] === $digit2;
+        $resultado = ($soma % 11 < 2) ? 0 : 11 - ($soma % 11);
+        return $resultado == (int)$digitos[1];
     }
 }

@@ -1,47 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import api from '../services/api';
 
-export default function CooperatorList() {
-  const [cooperators, setCooperators] = useState([]);
-  const [search, setSearch] = useState('');
-
-  async function fetchCooperators() {
-    try {
-      const response = await api.get('/cooperados', { params: { search } });
-      setCooperators(response.data.data);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  useEffect(() => {
-    fetchCooperators();
-  }, [search]);
+export default function CooperatorList({ cooperators, onChanged }) {
+  const remove = async (id) => {
+    if (!confirm('Remover este cooperado?')) return;
+    await api.delete('/cooperators/' + id);
+    onChanged && onChanged();
+  };
 
   return (
-    <div>
-      <h1>Cooperados</h1>
-      <input
-        type="text"
-        placeholder="Buscar por nome ou CPF/CNPJ"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        style={{ marginBottom: 12, padding: 8, width: '100%', maxWidth: 400 }}
-      />
-      <Link to="/cooperados/create" style={{ display: 'inline-block', marginBottom: 20 }}>
-        Novo Cooperado
-      </Link>
-
-      <ul>
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>CPF/CNPJ</th>
+          <th>Data</th>
+          <th>Renda/Faturamento</th>
+          <th>Telefone</th>
+          <th>Email</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
         {cooperators.map(c => (
-          <li key={c.id}>
-            <Link to={`/cooperados/${c.id}`}>
-              {c.name} - {c.cpf_cnpj}
-            </Link>
-          </li>
+          <tr key={c.id}>
+            <td>{c.name}</td>
+            <td>{c.cpf_cnpj}</td>
+            <td>{c.birth_constitution_date}</td>
+            <td>{c.income_revenue}</td>
+            <td>{c.phone}</td>
+            <td>{c.email || '-'}</td>
+            <td>
+              <button onClick={() => remove(c.id)}>Remover</button>
+            </td>
+          </tr>
         ))}
-      </ul>
-    </div>
+      </tbody>
+    </table>
   );
 }

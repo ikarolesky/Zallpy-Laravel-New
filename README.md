@@ -103,8 +103,9 @@ make test
 
 ### Frontend React
 
-*   `/` - Página inicial, listagem e filtros
-*   `/cooperados/create` - Tela de cadastro
-*   `/cooperados/{id}` - Tela de visualização e edição
+*   `/` - Pagina inicial com ReadME
+*   `/cooperados` - Listagem de cooperados
+*   `/cooperados/add` - Tela de cadastro
+*   `/cooperados/edit/{id}` - Tela de visualização e edição
 
 - - -
